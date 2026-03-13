@@ -1,0 +1,30 @@
+{
+  "name": "yt-downloader",
+  "version": "1.0.0",
+  "description": "YouTube AI Downloader",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.nigel.ytdownloader",
+    "productName": "YT Downloader",
+    "asar": false,
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": "dir",
+      "icon": "build/icon.icns"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "server.py",
+      "config.py"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}
