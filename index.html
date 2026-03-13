@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube AI Downloader</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 560px;
+    }
+
+    h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+
+    .subtitle { font-size: 14px; color: #8b949e; margin-bottom: 28px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 13px 16px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      color: #e6edf3;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.15s;
+      margin-bottom: 16px;
+    }
+    input[type="text"]:focus { border-color: #ff4444; }
+    input[type="text"]::placeholder { color: #484f58; }
+
+    .row { display: flex; gap: 12px; margin-bottom: 20px; }
+
+    .quality-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .quality-btn {
+      padding: 10px 4px;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      background: #0d1117;
+      color: #8b949e;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .quality-btn:hover { border-color: #8b949e; color: #e6edf3; }
+    .quality-btn.active { border-color: #ff4444; color: #ff4444; background: rgba(255,68,68,0.08); }
+    .quality-btn.audio.active { border-color: #58a6ff; color: #58a6ff; background: rgba(88,166,255,0.08); }
+
+    .count-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .count-row label { margin: 0; white-space: nowrap; }
+
+    .count-btns { display: flex; gap: 6px; }
+    .count-btn {
+      width: 38px;
+      height: 38px;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      background: #0d1117;
+      color: #8b949e;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .count-btn:hover { border-color: #8b949e; color: #e6edf3; }
+    .count-btn.active { border-color: #ff4444; color: #ff4444; background: rgba(255,68,68,0.08); }
+
+    .search-btn {
+      width: 100%;
+      padding: 14px;
+      background: #ff4444;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .search-btn:hover:not(:disabled) { background: #e03030; }
+    .search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .status-box {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: none;
+    }
+    .status-box.running {
+      display: block;
+      background: rgba(88,166,255,0.08);
+      border: 1px solid rgba(88,166,255,0.25);
+      color: #58a6ff;
+    }
+    .status-box.done {
+      display: block;
+      background: rgba(63,185,80,0.08);
+      border: 1px solid rgba(63,185,80,0.25);
+      color: #3fb950;
+    }
+    .status-box.error {
+      display: block;
+      background: rgba(255,68,68,0.08);
+      border: 1px solid rgba(255,68,68,0.25);
+      color: #ff6b6b;
+    }
+
+    .status-main { font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap-8px; gap: 8px; }
+    .progress-bar-wrap { background: rgba(255,255,255,0.08); border-radius: 4px; height: 4px; margin: 10px 0 4px; }
+    .progress-bar { height: 4px; border-radius: 4px; background: #58a6ff; transition: width 0.3s; }
+    .progress-bar.done { background: #3fb950; }
+    .progress-label { font-size: 12px; opacity: 0.7; }
+
+    .results-list { margin-top: 12px; }
+    .result-item {
+      font-size: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: #8b949e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .result-item:last-child { border-bottom: none; }
+    .result-item .dot { width: 6px; height: 6px; border-radius: 50%; background: #30363d; flex-shrink: 0; }
+    .result-item.saved .dot { background: #3fb950; }
+    .result-item.saved { color: #e6edf3; }
+
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid rgba(88,166,255,0.3);
+      border-top-color: #58a6ff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .save-note { font-size: 12px; color: #484f58; text-align: center; margin-top: 14px; }
+
+    .query-tag {
+      display: inline-block;
+      font-size: 11px;
+      background: rgba(255,68,68,0.1);
+      color: #ff6b6b;
+      border-radius: 4px;
+      padding: 2px 7px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>YouTube AI Downloader</h1>
+    <p class="subtitle">Describe what you want — AI finds and downloads it</p>
+
+    <label>What do you want?</label>
+    <input type="text" id="query" placeholder="e.g. Patrick Mahomes highlights 2024" />
+
+    <label>Quality</label>
+    <div class="quality-grid">
+      <button class="quality-btn active" data-q="best">Best</button>
+      <button class="quality-btn" data-q="1080p">1080p</button>
+      <button class="quality-btn" data-q="720p">720p</button>
+      <button class="quality-btn" data-q="480p">480p</button>
+      <button class="quality-btn audio" data-q="audio">🎵 MP3</button>
+    </div>
+
+    <div class="count-row">
+      <label>How many videos?</label>
+      <div class="count-btns">
+        <button class="count-btn" data-n="1">1</button>
+        <button class="count-btn" data-n="3">3</button>
+        <button class="count-btn active" data-n="5">5</button>
+        <button class="count-btn" data-n="10">10</button>
+      </div>
+    </div>
+
+    <button class="search-btn" id="searchBtn" onclick="startSearch()">Find &amp; Download</button>
+
+    <div class="status-box" id="status"></div>
+    <p class="save-note">Saves to ~/Downloads</p>
+  </div>
+
+  <script>
+    let selectedQuality = "best";
+    let selectedCount = 5;
+    let pollInterval = null;
+
+    document.querySelectorAll(".quality-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".quality-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedQuality = btn.dataset.q;
+      });
+    });
+
+    document.querySelectorAll(".count-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".count-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedCount = parseInt(btn.dataset.n);
+      });
+    });
+
+    async function startSearch() {
+      const query = document.getElementById("query").value.trim();
+      if (!query) { showError("Please describe what you want to download."); return; }
+
+      const btn = document.getElementById("searchBtn");
+      btn.disabled = true;
+      clearInterval(pollInterval);
+
+      showRunning("", 0, selectedCount, [], null);
+
+      try {
+        const res = await fetch("/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, count: selectedCount, quality: selectedQuality }),
+        });
+        const { job_id, error } = await res.json();
+        if (error) { showError(error); btn.disabled = false; return; }
+        poll(job_id);
+      } catch (e) {
+        showError("Could not connect to server.");
+        btn.disabled = false;
+      }
+    }
+
+    function poll(job_id) {
+      pollInterval = setInterval(async () => {
+        const res = await fetch(`/status?id=${job_id}`);
+        const data = await res.json();
+
+        if (data.status === "running") {
+          showRunning(data.message, data.downloaded || 0, data.total || selectedCount, data.results || [], data.refined_query);
+        } else if (data.status === "done") {
+          clearInterval(pollInterval);
+          showDone(data.message, data.downloaded || 0, data.total || selectedCount, data.results || [], data.refined_query);
+          document.getElementById("searchBtn").disabled = false;
+        } else if (data.status === "error") {
+          clearInterval(pollInterval);
+          showError(data.message);
+          document.getElementById("searchBtn").disabled = false;
+        }
+      }, 800);
+    }
+
+    function showRunning(message, downloaded, total, results, refinedQuery) {
+      const el = document.getElementById("status");
+      el.className = "status-box running";
+      const pct = total > 0 ? Math.round((downloaded / total) * 100) : 0;
+      el.innerHTML = `
+        ${refinedQuery ? `<div class="query-tag">🔍 "${refinedQuery}"</div>` : ""}
+        <div class="status-main"><span class="spinner"></span> ${message || "Working..."}</div>
+        <div class="progress-bar-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
+        <div class="progress-label">${downloaded} of ${total} downloaded</div>
+        ${renderResults(results, downloaded)}
+      `;
+    }
+
+    function showDone(message, downloaded, total, results, refinedQuery) {
+      const el = document.getElementById("status");
+      el.className = "status-box done";
+      el.innerHTML = `
+        ${refinedQuery ? `<div class="query-tag">🔍 "${refinedQuery}"</div>` : ""}
+        <div class="status-main">✓ ${message}</div>
+        <div class="progress-bar-wrap"><div class="progress-bar done" style="width:100%"></div></div>
+        ${renderResults(results, downloaded)}
+      `;
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("status");
+      el.className = "status-box error";
+      el.innerHTML = `<div class="status-main">✗ ${msg}</div>`;
+    }
+
+    function renderResults(results, downloaded) {
+      if (!results || results.length === 0) return "";
+      const items = results.map((v, i) => `
+        <div class="result-item ${i < downloaded ? "saved" : ""}">
+          <span class="dot"></span>
+          <span>${v.title}</span>
+        </div>
+      `).join("");
+      return `<div class="results-list">${items}</div>`;
+    }
+
+    document.getElementById("query").addEventListener("keydown", e => {
+      if (e.key === "Enter") startSearch();
+    });
+  </script>
+</body>
+</html>
